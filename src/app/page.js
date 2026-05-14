@@ -210,13 +210,17 @@ export default function Home() {
             <ul className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {popularScholars.map((s) => (
                 <li
-                  key={s.name}
+                  key={s.slug}
                   className="overflow-hidden rounded-2xl border border-asas-ink/10 bg-asas-white shadow-sm"
                 >
                   <div
-                    className="aspect-[4/3] bg-gradient-to-br from-asas-green/25 via-asas-wood/20 to-asas-white"
+                    className="flex aspect-[4/3] items-center justify-center bg-neutral-300"
                     aria-hidden
-                  />
+                  >
+                    <span className="text-2xl font-semibold text-neutral-600 sm:text-3xl">
+                      {s.initials}
+                    </span>
+                  </div>
                   <div className="p-4">
                     <p className="font-semibold text-asas-ink">{s.name}</p>
                     <p className="mt-1 text-sm text-asas-ink/65">{s.focus}</p>

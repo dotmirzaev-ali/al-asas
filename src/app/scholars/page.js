@@ -38,26 +38,34 @@ export default function ScholarsPage() {
         </div>
 
         <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
-          <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {scholars.map((s) => (
               <li
-                key={s.name}
+                key={s.slug}
                 className="flex flex-col overflow-hidden rounded-2xl border border-asas-ink/10 bg-asas-white shadow-sm transition hover:border-asas-wood/40 hover:shadow-md"
               >
                 <div
-                  className="aspect-[5/3] bg-gradient-to-br from-asas-green/25 via-asas-wood/20 to-asas-white"
+                  className="flex aspect-[5/3] items-center justify-center bg-neutral-300"
                   aria-hidden
-                />
+                >
+                  <span className="text-3xl font-semibold tabular-nums tracking-tight text-neutral-600 sm:text-4xl">
+                    {s.initials}
+                  </span>
+                </div>
                 <div className="flex flex-1 flex-col p-5">
                   <p className="text-lg font-semibold text-asas-ink">{s.name}</p>
                   <p className="mt-1 text-sm font-medium text-asas-wood">
                     {s.focus}
                   </p>
-                  {s.bio ? (
-                    <p className="mt-3 flex-1 text-sm leading-relaxed text-asas-ink/75">
-                      {s.bio}
-                    </p>
-                  ) : null}
+                  <p className="mt-3 flex-1 text-sm leading-relaxed text-asas-ink/75">
+                    {s.bio}
+                  </p>
+                  <Link
+                    href={`/scholars/${s.slug}`}
+                    className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-full bg-asas-green text-sm font-semibold text-asas-white transition hover:bg-asas-green/90 sm:w-auto sm:self-start sm:px-8"
+                  >
+                    Подробнее
+                  </Link>
                 </div>
               </li>
             ))}
