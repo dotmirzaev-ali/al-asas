@@ -18,7 +18,7 @@ export function SiteHeader() {
             Учёные
           </Link>
           <Link
-            href="/#topics"
+            href="/topics"
             className="transition-colors hover:text-asas-green"
           >
             Темы

@@ -137,7 +137,7 @@ export default function Home() {
                 С чего начать
               </Link>
               <Link
-                href="#topics"
+                href="/topics"
                 className="inline-flex h-12 min-h-12 w-full shrink-0 items-center justify-center rounded-full border-2 border-asas-wood px-8 text-center text-sm font-semibold text-asas-green transition hover:bg-asas-wood/10 sm:w-auto sm:min-w-[12rem]"
               >
                 Найти по теме
@@ -269,7 +269,7 @@ export default function Home() {
                     </Link>
                   </li>
                   <li>
-                    <Link href="/#topics" className="hover:text-asas-green">
+                    <Link href="/topics" className="hover:text-asas-green">
                       Темы
                     </Link>
                   </li>
