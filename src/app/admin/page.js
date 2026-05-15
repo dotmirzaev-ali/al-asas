@@ -88,6 +88,44 @@ function StatCard({ title, value }) {
   );
 }
 
+function MenuIcon({ open }) {
+  return (
+    <svg
+      className="size-6"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      aria-hidden
+    >
+      {open ? (
+        <path d="M6 6l12 12M18 6L6 18" />
+      ) : (
+        <>
+          <path d="M4 7h16M4 12h16M4 17h16" />
+        </>
+      )}
+    </svg>
+  );
+}
+
+/** @param {{ children: import('react').ReactNode; empty?: boolean; emptyText?: string }} props */
+function TableScroll({ children, empty, emptyText }) {
+  return (
+    <div className="min-w-0 w-full max-w-full">
+      <div className="overflow-x-auto overscroll-x-contain rounded-xl border border-asas-ink/10 [-webkit-overflow-scrolling:touch]">
+        {children}
+      </div>
+      {empty && emptyText ? (
+        <p className="border-x border-b border-asas-ink/10 p-6 text-center text-sm text-asas-ink/60">
+          {emptyText}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const [hydrated, setHydrated] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
@@ -95,6 +133,7 @@ export default function AdminPage() {
   const [password, setPassword] = useState("");
   const [authError, setAuthError] = useState("");
   const [section, setSection] = useState("dashboard");
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const [scholarRows, setScholarRows] = useState(() =>
     scholarsSeed.map((s) => ({
@@ -117,6 +156,30 @@ export default function AdminPage() {
     } catch {
       /* ignore */
     }
+  }, []);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const onChange = () => {
+      if (mq.matches) setMenuOpen(false);
+    };
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, [menuOpen]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [menuOpen]);
+
+  const selectSection = useCallback((id) => {
+    setSection(id);
+    setMenuOpen(false);
   }, []);
 
   const handleLogin = useCallback(
@@ -148,6 +211,7 @@ export default function AdminPage() {
     setLogin("");
     setPassword("");
     setSection("dashboard");
+    setMenuOpen(false);
   }, []);
 
   const deleteScholar = useCallback((slug) => {
@@ -309,20 +373,34 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-asas-white">
-      <aside className="fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-white/10 bg-[#1C3A2F] text-white lg:static">
+    <div className="flex min-h-screen overflow-x-hidden bg-asas-white lg:flex-row">
+      {menuOpen ? (
+        <button
+          type="button"
+          aria-label="Закрыть меню"
+          className="fixed inset-0 z-40 bg-asas-ink/50 lg:hidden"
+          onClick={() => setMenuOpen(false)}
+        />
+      ) : null}
+
+      <aside
+        id="admin-sidebar"
+        className={`fixed inset-y-0 left-0 z-50 flex w-[min(16rem,85vw)] max-w-full flex-col border-r border-white/10 bg-[#1C3A2F] text-white shadow-xl transition-transform duration-200 ease-out lg:static lg:z-auto lg:w-64 lg:shrink-0 lg:translate-x-0 lg:shadow-none ${
+          menuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        }`}
+      >
         <div className="border-b border-white/10 px-5 py-6">
           <p className="text-lg font-semibold tracking-tight">Аль-Асас</p>
           <p className="mt-0.5 text-xs font-medium uppercase tracking-widest text-white/50">
             Админ-панель
           </p>
         </div>
-        <nav className="flex flex-1 flex-col gap-0.5 px-3 py-4">
+        <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-3 py-4">
           {navItems.map((item) => (
             <button
               key={item.id}
               type="button"
-              onClick={() => setSection(item.id)}
+              onClick={() => selectSection(item.id)}
               className={`rounded-lg px-3 py-2.5 text-left text-sm font-medium transition ${
                 section === item.id
                   ? "bg-white/15 text-white"
@@ -352,20 +430,30 @@ export default function AdminPage() {
         </div>
       </aside>
 
-      <div className="flex min-h-screen min-w-0 flex-1 flex-col pl-64 lg:pl-0">
-        <header className="sticky top-0 z-30 border-b border-asas-ink/10 bg-asas-white px-4 py-4 sm:px-8">
-          <h1 className="text-lg font-semibold text-asas-ink sm:text-xl">
+      <div className="flex min-h-screen min-w-0 w-full flex-1 flex-col">
+        <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-asas-ink/10 bg-asas-white px-4 py-3 sm:px-8 sm:py-4">
+          <button
+            type="button"
+            onClick={() => setMenuOpen((open) => !open)}
+            className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg border border-asas-ink/15 text-asas-ink transition hover:bg-asas-ink/5 lg:hidden"
+            aria-expanded={menuOpen}
+            aria-controls="admin-sidebar"
+            aria-label={menuOpen ? "Закрыть меню" : "Открыть меню"}
+          >
+            <MenuIcon open={menuOpen} />
+          </button>
+          <h1 className="min-w-0 flex-1 truncate text-lg font-semibold text-asas-ink sm:text-xl">
             {navItems.find((n) => n.id === section)?.label ?? "Панель"}
           </h1>
         </header>
 
-        <div className="flex-1 bg-asas-white px-4 py-6 sm:px-8 sm:py-8">
+        <div className="min-w-0 flex-1 bg-asas-white px-4 py-6 sm:px-8 sm:py-8">
           {section === "dashboard" ? (
             <div className="space-y-8">
               <p className="max-w-2xl text-sm text-asas-ink/70">
                 Обзор ключевых показателей платформы (условные числа для обзора).
               </p>
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <StatCard title="Учёные" value={stats.scholars} />
                 <StatCard title="Темы" value={stats.topics} />
                 <StatCard title="Лекции" value={stats.lectures} />
@@ -375,8 +463,11 @@ export default function AdminPage() {
           ) : null}
 
           {section === "scholars" ? (
-            <div className="overflow-x-auto rounded-xl border border-asas-ink/10">
-              <table className="min-w-full divide-y divide-asas-ink/10 text-left text-sm">
+            <TableScroll
+              empty={scholarRows.length === 0}
+              emptyText="Список пуст. Обновите страницу, чтобы снова загрузить данные."
+            >
+              <table className="min-w-[36rem] w-full divide-y divide-asas-ink/10 text-left text-sm">
                 <thead className="bg-asas-ink/[0.04]">
                   <tr>
                     <th className="whitespace-nowrap px-4 py-3 font-semibold text-asas-ink">
@@ -423,29 +514,27 @@ export default function AdminPage() {
                   ))}
                 </tbody>
               </table>
-              {scholarRows.length === 0 ? (
-                <p className="p-6 text-center text-sm text-asas-ink/60">
-                  Список пуст. Обновите страницу, чтобы снова загрузить данные.
-                </p>
-              ) : null}
-            </div>
+            </TableScroll>
           ) : null}
 
           {section === "topics" ? (
-            <div className="overflow-x-auto rounded-xl border border-asas-ink/10">
-              <table className="min-w-full divide-y divide-asas-ink/10 text-left text-sm">
+            <TableScroll
+              empty={topicRows.length === 0}
+              emptyText="Тем не осталось."
+            >
+              <table className="min-w-[32rem] w-full divide-y divide-asas-ink/10 text-left text-sm">
                 <thead className="bg-asas-ink/[0.04]">
                   <tr>
-                    <th className="px-4 py-3 font-semibold text-asas-ink">
+                    <th className="whitespace-nowrap px-4 py-3 font-semibold text-asas-ink">
                       Тема
                     </th>
-                    <th className="px-4 py-3 font-semibold text-asas-ink">
+                    <th className="whitespace-nowrap px-4 py-3 font-semibold text-asas-ink">
                       Слаг
                     </th>
-                    <th className="px-4 py-3 font-semibold text-asas-ink">
+                    <th className="whitespace-nowrap px-4 py-3 font-semibold text-asas-ink">
                       Лекций
                     </th>
-                    <th className="px-4 py-3 text-right font-semibold text-asas-ink">
+                    <th className="whitespace-nowrap px-4 py-3 text-right font-semibold text-asas-ink">
                       Действия
                     </th>
                   </tr>
@@ -482,29 +571,27 @@ export default function AdminPage() {
                   ))}
                 </tbody>
               </table>
-              {topicRows.length === 0 ? (
-                <p className="p-6 text-center text-sm text-asas-ink/60">
-                  Тем не осталось.
-                </p>
-              ) : null}
-            </div>
+            </TableScroll>
           ) : null}
 
           {section === "hadiths" ? (
-            <div className="overflow-x-auto rounded-xl border border-asas-ink/10">
-              <table className="min-w-full divide-y divide-asas-ink/10 text-left text-sm">
+            <TableScroll
+              empty={hadithRows.length === 0}
+              emptyText="Записей нет."
+            >
+              <table className="min-w-[36rem] w-full divide-y divide-asas-ink/10 text-left text-sm">
                 <thead className="bg-asas-ink/[0.04]">
                   <tr>
-                    <th className="px-4 py-3 font-semibold text-asas-ink">
+                    <th className="whitespace-nowrap px-4 py-3 font-semibold text-asas-ink">
                       Заголовок
                     </th>
-                    <th className="px-4 py-3 font-semibold text-asas-ink">
+                    <th className="whitespace-nowrap px-4 py-3 font-semibold text-asas-ink">
                       Источник
                     </th>
-                    <th className="px-4 py-3 font-semibold text-asas-ink">
+                    <th className="whitespace-nowrap px-4 py-3 font-semibold text-asas-ink">
                       Статус
                     </th>
-                    <th className="px-4 py-3 text-right font-semibold text-asas-ink">
+                    <th className="whitespace-nowrap px-4 py-3 text-right font-semibold text-asas-ink">
                       Действия
                     </th>
                   </tr>
@@ -541,29 +628,27 @@ export default function AdminPage() {
                   ))}
                 </tbody>
               </table>
-              {hadithRows.length === 0 ? (
-                <p className="p-6 text-center text-sm text-asas-ink/60">
-                  Записей нет.
-                </p>
-              ) : null}
-            </div>
+            </TableScroll>
           ) : null}
 
           {section === "users" ? (
-            <div className="overflow-x-auto rounded-xl border border-asas-ink/10">
-              <table className="min-w-full divide-y divide-asas-ink/10 text-left text-sm">
+            <TableScroll
+              empty={userRows.length === 0}
+              emptyText="Пользователей в списке нет."
+            >
+              <table className="min-w-[36rem] w-full divide-y divide-asas-ink/10 text-left text-sm">
                 <thead className="bg-asas-ink/[0.04]">
                   <tr>
-                    <th className="px-4 py-3 font-semibold text-asas-ink">
+                    <th className="whitespace-nowrap px-4 py-3 font-semibold text-asas-ink">
                       Email
                     </th>
-                    <th className="px-4 py-3 font-semibold text-asas-ink">
+                    <th className="whitespace-nowrap px-4 py-3 font-semibold text-asas-ink">
                       Роль
                     </th>
-                    <th className="px-4 py-3 font-semibold text-asas-ink">
+                    <th className="whitespace-nowrap px-4 py-3 font-semibold text-asas-ink">
                       Регистрация
                     </th>
-                    <th className="px-4 py-3 text-right font-semibold text-asas-ink">
+                    <th className="whitespace-nowrap px-4 py-3 text-right font-semibold text-asas-ink">
                       Действия
                     </th>
                   </tr>
@@ -600,16 +685,11 @@ export default function AdminPage() {
                   ))}
                 </tbody>
               </table>
-              {userRows.length === 0 ? (
-                <p className="p-6 text-center text-sm text-asas-ink/60">
-                  Пользователей в списке нет.
-                </p>
-              ) : null}
-            </div>
+            </TableScroll>
           ) : null}
 
           {section === "settings" ? (
-            <div className="max-w-xl rounded-xl border border-asas-ink/10 bg-asas-white p-6 shadow-sm">
+            <div className="w-full max-w-xl rounded-xl border border-asas-ink/10 bg-asas-white p-6 shadow-sm">
               <h2 className="text-base font-semibold text-asas-ink">
                 Настройки
               </h2>
